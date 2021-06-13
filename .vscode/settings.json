@@ -1,6 +1,8 @@
 {
 	"Lua.diagnostics.globals": [
 		"explore",
-		"turtle"
+		"turtle",
+		"http",
+		"fs"
 	]
 }
