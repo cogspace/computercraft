@@ -3,7 +3,7 @@ BASE_URL = "https://raw.githubusercontent.com"
 
 local args = {...}
 if #args < 3 or #args > 4 then
-	print("Usage: github <user> <repo> <filename> [branch (default: master)]")
+	print("Usage: github <user> <repo> <filename> [branch]")
 	return
 end
 
