@@ -12,6 +12,10 @@ local repo     = args[2]
 local filename = args[3]
 local branch   = args[4]
 
+if not branch then
+	branch = "master"
+end
+
 local cacheBuster = math.random(99999999999)
 
 local url = BASE_URL.."/"..user.."/"..repo.."/"..branch.."/"..filename.."?"..cacheBuster
