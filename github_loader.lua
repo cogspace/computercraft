@@ -17,6 +17,11 @@ local url = (
 )
 
 local request = http.get( url )
+if not request then
+	print("Reading from URL failed: " .. url)
+	exit()
+end
+
 local response = request.readAll()
 request.close()
 

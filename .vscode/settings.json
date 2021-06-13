@@ -3,6 +3,7 @@
 		"explore",
 		"turtle",
 		"http",
-		"fs"
+		"fs",
+		"exit"
 	]
 }
