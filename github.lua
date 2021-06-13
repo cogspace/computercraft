@@ -4,8 +4,8 @@ BASE_URL = "https://raw.githubusercontent.com"
 -- Parse args
 local args = {...}
 if #args < 3 or #args > 4 then
-	print("Usage: github <user> <repo> <filename> [branch]")
-	return
+    print("Usage: github <user> <repo> <filename> [branch]")
+    return
 end
 
 local user     = args[1]
@@ -14,7 +14,7 @@ local filename = args[3]
 local branch   = args[4]
 
 if not branch then
-	branch = "master"
+    branch = "master"
 end
 
 -- Build URL
@@ -24,9 +24,9 @@ local url = BASE_URL.."/"..user.."/"..repo.."/"..branch.."/"..filename.."?"..cac
 -- Download code
 local request = http.get(url)
 if not request then
-	print("Reading from URL failed: " .. url)
-	print("Note: Only public repositories are supported.")
-	return
+    print("Reading from URL failed: " .. url)
+    print("Note: Only public repositories are supported.")
+    return
 end
 
 local response = request.readAll()
