@@ -24,4 +24,4 @@ local file = fs.open( FILENAME, "w" )
 file.write( response )
 file.close()
 
-print(("%d bytes written to %s"):format(request:length(), FILENAME))
+print(("%d bytes written to %s"):format(response:length(), FILENAME))
