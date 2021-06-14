@@ -9,14 +9,12 @@ IGNORE = {
 }
 
 local function ensureFuel(n)
+    turtle.select(FUEL_SLOT)
     while turtle.getFuelLevel() < n do
-        local prevSelSlot = turtle.getSelectedSlot()
-        turtle.select(FUEL_SLOT)
         if turtle.getItemCount() == 0 then
             error("Ran out of fuel :(")
         end
         turtle.refuel(1)
-        turtle.select(prevSelSlot)
     end
 end
 
