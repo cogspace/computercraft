@@ -187,7 +187,7 @@ local function digBox(x, y, z)
         for j = 1, fullSlices do
             for i = 1, x do
                 digMultiAndMove(z-1, true, true)
-                if i ~= x-1 then
+                if i < x then
                     uTurn(i)
                 end
             end
@@ -225,13 +225,13 @@ local function digBox(x, y, z)
     -- Remove incomplete slices
     if sliceRemainder > 0 then
         moveLayers(sliceRemainder)
-        for i = 1, x-1 do
+        for i = 1, x do
             if goingUp then
                 digMultiAndMove(z-1, true, false)
             else
                 digMultiAndMove(z-1, false, true)
             end
-            if i ~= x-1 then
+            if i < x then
                 uTurn(i)
             end
         end
