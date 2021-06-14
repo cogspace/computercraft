@@ -162,12 +162,12 @@ local function digBox(x, y, z)
         if goingRight == (i % 2 == 1) then
             -- Clockwise U-turn
             turnRight()
-            digAndMove()
+            digMultiAndMove(1, true, true)
             turnRight()
         else
             -- Anticlockwise U-turn
             turnLeft()
-            digAndMove()
+            digMultiAndMove(1, true, true)
             turnLeft()
         end
     end
@@ -186,13 +186,16 @@ local function digBox(x, y, z)
         for j = 1, fullSlices do
             for i = 1, x-1 do
                 digMultiAndMove(z-1, true, true)
-                uTurn(i)
+                if i ~= x-1 then
+                    uTurn(i)
+                end
             end
+            turnRight()
+            if 
             if j < fullSlices-1 then
                 moveLayers(3)
             end
         end
-        digMulti(true, false, true)
         moveLayers(1)
     end
 
@@ -205,9 +208,10 @@ local function digBox(x, y, z)
             else
                 digMultiAndMove(z-1, false, true)
             end
-            uTurn(i)
+            if i ~= x-1 then
+                uTurn(i)
+            end
         end
-        digMulti(true, false, true)
     end
 end
 
