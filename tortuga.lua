@@ -142,10 +142,10 @@ local function digBox(x, y, z)
         x = -x
         z = -z
     end
-    local goingRight = x > 0
     local goingUp = y > 0
-    if not goingRight then
-        x = -x
+    if x < 0 then
+        x, z = z, -x
+        turnLeft()
     end
     if not goingUp then
         y = -y
@@ -159,7 +159,7 @@ local function digBox(x, y, z)
     local sliceRemainder = y % 3
 
     local function uTurn(i)
-        if goingRight == (i % 2 == 1) then
+        if i % 2 == 1 then
             -- Clockwise U-turn
             turnRight()
             digMultiAndMove(1, true, true)
@@ -182,6 +182,7 @@ local function digBox(x, y, z)
 
     -- Remove complete 3-slices
     if fullSlices >= 1 then
+        -- Shift to the middle of the first 3-slice
         moveLayers(1)
         for j = 1, fullSlices do
             for i = 1, x-1 do
@@ -190,12 +191,34 @@ local function digBox(x, y, z)
                     uTurn(i)
                 end
             end
+
+            -- Rotate to cut the next layer
             turnRight()
-            if 
+            if x % 2 == 1 then
+                --[[
+                    If there were an odd number of columns, we need to turn all the way around.
+                    >-----,      <-----,
+                    ,-----'  >>  ,-----'
+                    '----->      '-----<
+                ]]
+                turnRight()
+            else
+                --[[
+                    Otherwise, we are cutting on the other horizontal axis now and need to flip x and z.
+                    ,----->      ,--,  V
+                    '-----,  >>  |  |  |
+                    ,-----'  >>  |  |  |
+                    '-----<      V  '--'
+                ]]
+                x, z = z, x
+            end
+
             if j < fullSlices-1 then
+                -- Shift to the middle of the next 3-slice
                 moveLayers(3)
             end
         end
+        -- Shift to the top (positive y) or bottom (negative y) of the last 3-slice
         moveLayers(1)
     end
 
