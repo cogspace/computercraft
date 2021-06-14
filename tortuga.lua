@@ -131,7 +131,7 @@ end
     Negative dimensions will dig left/down/backward.
 ]]
 local function digBox(x, y, z)
-    if x == 0 or y == 0 or z == 0 then
+    if not x or not y or not z then
         print("[Tortuga] Warning: digBox() called with zero dimension ("..x..","..y..","..z.."). Doing nothing.")
         return
     end
