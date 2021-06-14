@@ -158,16 +158,16 @@ local function digBox(x, y, z)
     local fullSlices = math.floor(y / 3)
     local sliceRemainder = y % 3
 
-    local function uTurn(i)
+    local function uTurn(i, doDigDown, doDigUp)
         if i % 2 == 1 then
             -- Clockwise U-turn
             turnRight()
-            digMultiAndMove(1, true, true)
+            digMultiAndMove(1, doDigDown, doDigUp)
             turnRight()
         else
             -- Anticlockwise U-turn
             turnLeft()
-            digMultiAndMove(1, true, true)
+            digMultiAndMove(1, doDigDown, doDigUp)
             turnLeft()
         end
     end
@@ -188,7 +188,7 @@ local function digBox(x, y, z)
             for i = 1, x do
                 digMultiAndMove(z-1, true, true)
                 if i < x then
-                    uTurn(i)
+                    uTurn(i, true, true)
                 end
             end
 
@@ -213,6 +213,8 @@ local function digBox(x, y, z)
                 x, z = z, x
             end
 
+            digUp()
+            digDown()
             if j < fullSlices-1 then
                 -- Shift to the middle of the next 3-slice
                 moveLayers(3)
@@ -228,11 +230,14 @@ local function digBox(x, y, z)
         for i = 1, x do
             if goingUp then
                 digMultiAndMove(z-1, true, false)
+                if i < x then
+                    uTurn(i, true, false)
+                end
             else
                 digMultiAndMove(z-1, false, true)
-            end
-            if i < x then
-                uTurn(i)
+                if i < x then
+                    uTurn(i, false, true)
+                end
             end
         end
     end
