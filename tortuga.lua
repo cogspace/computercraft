@@ -1,9 +1,30 @@
--- Automatically refuel using the first available fuel item.
+-- CONSTANTS
+
+
+local NUM_SLOTS = 16
+
+
+-- UTILS
+
+
+---Check that `test` is true, else throw err
+---@param test boolean|nil Test value
+---@param err string Error message
+local function check(test, err)
+    if not test then
+        error(err)
+    end
+end
+
+---Automatically refuel using the first available fuel item.
+---Maintains previous selection.
+---@param min number The minimum level to fuel up to
+---@return boolean success If the refueling succeeded (else error)
 local function refuel(min)
+    local previousSelection = turtle.getSelectedSlot()
     while turtle.getFuelLevel() < min do
-        local previousSelection = turtle.getSelectedSlot()
         local fueled = false
-        for slot = 1, 16 do
+        for slot = 1, NUM_SLOTS do
             turtle.select(slot)
             if turtle.refuel(1) then
                 fueled = true
@@ -11,53 +32,127 @@ local function refuel(min)
             end
         end
         if not fueled then
-            return error("[Tortuga] Ran out of fuel :(")
+            -- If there's no fuel, throw an error.
+            -- TODO: Make this optional?
+            error("Ran out of fuel :(")
         end
-        turtle.select(previousSelection)
     end
+    turtle.select(previousSelection)
     return true
 end
 
--- Dig forward, refueling first if necessary
-local function dig()
-    refuel(1)
-    return turtle.dig()
+---Select an item with the provided name
+---@param itemName string The name of the item to select (e.g. "minecraft:stone")
+---@return boolean success Whether the item was successfully selected (else, error)
+local function select(itemName)
+    -- If the right item is already selected, don't do anything.
+    local currentItem = turtle.getItemDetail()
+    if currentItem and currentItem.name == itemName then
+        return true
+    end
+    -- Otherwise, try to find the item.
+    for slot = 1, NUM_SLOTS do
+        if turtle.select(slot) and turtle.getItemDetail().name == itemName then
+            return true
+        end
+    end
+    -- If we can't find it, throw an error.
+    -- TODO: Make this optional?
+    error("Ran out of item '"..itemName.."' :(")
 end
 
--- Dig up, refueling first if necessary
-local function digUp()
-    refuel(1)
-    return turtle.digUp()
+local getItemDetail = turtle.getItemDetail
+local getItemCount = turtle.getItemCount
+local getItemSpace = turtle.getItemSpace
+
+---Get the name of the currently selected item
+---@return string|nil itemName The currently selected item name (or nil)
+local function getSelectedItemName()
+    local currentItem = getItemDetail()
+    if currentItem then
+        return currentItem.name
+    end
+    return nil
 end
 
--- Dig down, refueling first if neceesary
-local function digDown()
-    refuel(1)
-    return turtle.digDown()
+---Get the total count of a given item name including all stacks
+---@param itemName string The name of the item to count
+---@return integer total The total count of the item
+local function getItemTotal(itemName)
+    local count = 0
+    for slot = 1, NUM_SLOTS do
+        local item = getItemDetail(slot)
+        if item and item.name == itemName then
+            count = count + turtle.getItemCount(slot)
+        end
+    end
+    return count
 end
 
--- Move forward, refueling first if necessary
+
+-- MOVEMENT
+
+
+---Move forward, refueling first if necessary
+---@return boolean success Whether moving succeeded or not
 local function forward()
     refuel(1)
     return turtle.forward()
 end
 
--- Move back, refueling first if necessary
+---Move back, refueling first if necessary
+---@return boolean success Whether moving succeeded or not
 local function back()
     refuel(1)
     return turtle.back()
 end
 
--- Move up, refueling first if necessary
+---Move up, refueling first if necessary
+---@return boolean success Whether moving succeeded or not
 local function up()
     refuel(1)
     return turtle.up()
 end
 
--- Move down, refueling first if necessary
+---Move down, refueling first if necessary
+---@return boolean success Whether moving succeeded or not
 local function down()
     refuel(1)
     return turtle.down()
+end
+
+local turnRight = turtle.turnRight
+local turnLeft = turtle.turnLeft
+
+---Turn 180 degrees
+---@return boolean success If turning around succeeded (I don't think it can actually fail?)
+local function turnAround()
+    return turnRight() and turnRight()
+end
+
+
+-- DIGGING
+
+
+---Dig forward, refueling first if necessary
+---@return boolean success Whether digging succeeded or not
+local function dig()
+    refuel(1)
+    return turtle.dig()
+end
+
+---Dig up, refueling first if necessary
+---@return boolean success Whether digging succeeded or not
+local function digUp()
+    refuel(1)
+    return turtle.digUp()
+end
+
+---Dig down, refueling first if necessary
+---@return boolean success Whether digging succeeded or not
+local function digDown()
+    refuel(1)
+    return turtle.digDown()
 end
 
 -- Dig out an entire contiguous blob of resources
@@ -65,80 +160,100 @@ end
 --     return error("TODO")
 -- end
 
-local turnRight = turtle.turnRight
-local turnLeft = turtle.turnLeft
-
---[[
-    Dig multiple slots in one fell swoop (down, forward, up)
-]]
+---Dig multiple slots in one fell swoop
+---@param down boolean Whether to dig downward
+---@param forward boolean Whether to dig forward
+---@param up boolean Whether to dig upward
+---@return boolean|nil downSuccess, boolean|nil forwardSuccess, boolean|nil upSuccess Whether each requested digging operation succeeded
 local function digMulti(down, forward, up)
+    local downSuccess
+    local forwardSuccess
+    local upSuccess
     if down then
-        digDown()
+        downSuccess = digDown()
     end
     if forward then
-        dig()
+        forwardSuccess = dig()
     end
     if up then
-        digUp()
+        upSuccess = digUp()
     end
+    return downSuccess, forwardSuccess, upSuccess
 end
 
---[[
-    Dig and move up a specified number of blocks (n)
-]]
+---Dig and move up a specified number of blocks
+---@param n integer The number of blocks to move upward (default: 1)
+---@return boolean success Whether all moves succeeded
 local function digAndMoveUp(n)
     if not n then
         n = 1
     end
     for _ = 1, n do
         digUp()
-        up()
+        if not up() then
+            return false
+        end
     end
+    return true
 end
 
---[[
-    Dig and move forward a specified number of blocks (n)
-]]
+---Dig and move forward a specified number of blocks
+---@param n integer The number of blocks to move forward (default: 1)
+---@return boolean success Whether all moves succeeded
 local function digAndMove(n)
     if not n then
         n = 1
     end
     for _ = 1, n do
         dig()
-        forward()
+        if not forward() then
+            return false
+        end
     end
+    return true
 end
 
---[[
-    Dig and move down a specified number of blocks (n)
-]]
+---Dig and move down a specified number of blocks
+---@param n integer The number of blocks to move downward (default: 1)
+---@return boolean success Whether all moves succeeded
 local function digAndMoveDown(n)
     if not n then
         n = 1
     end
     for _ = 1, n do
         digDown()
-        down()
+        if not down() then
+            return false
+        end
     end
+    return true
 end
 
+---Dig forward (and optionally up and down) and move forward the specified distance
+---@param n integer The number of blocks to move forward (default: 1)
+---@param down boolean Whether to dig downward each step
+---@param up boolean Whether to dig upward each step
+---@return boolean success Whether all moves succeeded
 local function digMultiAndMove(n, down, up)
     if not n then
         n = 1
     end
     for _ = 1, n do
         digMulti(down, true, up)
-        forward()
+        if not forward() then
+            return false
+        end
     end
+    return true
 end
 
---[[
-    Dig out a box with dimensions x (right), y (up), z (forward).
-    Negative dimensions will dig left/down/backward.
-]]
+---Dig out a box with specified dimensions. Negative dimensions will dig left / down / backward.
+---@param x integer Width of the box (including the turtle). Positive = right.
+---@param y integer Height of the box (including the turtle). Positive = up.
+---@param z integer Depth of the box (including the turtle). Positive = forward.
 local function digBox(x, y, z)
     if not x or not y or not z then
-        print("[Tortuga] Warning: digBox() called with zero dimension ("..x..","..y..","..z.."). Doing nothing.")
+        warn("[Tortuga] digBox() called with zero dimension (x="..x..", y="..y..", z="..z.."). Doing nothing.")
         return
     end
     -- If digging backwards, turn around and flip x and z
@@ -232,62 +347,65 @@ local function digBox(x, y, z)
 
     -- Remove incomplete slices
     if sliceRemainder > 0 then
-        moveLayers(sliceRemainder)
+        moveLayers(sliceRemainder-1)
         for i = 1, x do
-            if goingUp then
-                digMultiAndMove(z-1, true, false)
-                if i < x then
-                    uTurn(i, true, false)
-                end
-            else
-                digMultiAndMove(z-1, false, true)
-                if i < x then
-                    uTurn(i, false, true)
-                end
+            digMultiAndMove(z-1, true, true)
+            if i < x then
+                uTurn(i, true, true)
             end
         end
         if goingUp then
-            digDown()
-        else
             digUp()
+        else
+            digDown()
         end
     end
 end
 
-local function place()
+
+-- PLACEMENT
+
+
+---Place a specified item (or the currently selected item) in front of the turtle
+---@param itemName string|nil The name of the item to place (or whatever is selected)
+---@return boolean success Whether placing the item succeeded
+local function place(itemName)
     refuel(1)
+    if itemName then
+        select(itemName)
+    end
     return turtle.place()
 end
 
-local function placeUp()
+---Place a specified item (or the currently selected item) above the turtle
+---@param itemName string|nil The name of the item to place (or whatever is selected)
+---@return boolean success Whether placing the item succeeded
+local function placeUp(itemName)
     refuel(1)
+    if itemName then
+        select(itemName)
+    end
     return turtle.placeUp()
 end
 
-local function placeDown()
+---Place a specified item (or the currently selected item) below the turtle
+---@param itemName string|nil The name of the item to place (or whatever is selected)
+---@return boolean success Whether placing the item succeeded
+local function placeDown(itemName)
     refuel(1)
+    if itemName then
+        select(itemName)
+    end
     return turtle.placeDown()
 end
 
--- Select an item with the provided name (e.g. "minecraft:stone")
-local function select(itemName)
-    for slot = 1, 16 do
-        turtle.select(slot)
-        if turtle.getItemDetail().name == itemName then
-            return true
-        end
-    end
-    return false
-end
-
--- Place a line of the same item.
+---Place a line of the same item.
+---@param length integer The length of the line
+---@param itemName string|nil The name of the item to place (or whatever is selected)
 local function placeLine(length, itemName)
-    if not itemName then
-        itemName = turtle.getItemDetail().name
-    end
     for i = 1, length do
-        if not select(itemName) then
-            error("Ran out of material '"..itemName.."'")
+        if itemName then
+            select(itemName)
         end
         place(itemName)
         back()
@@ -295,31 +413,110 @@ local function placeLine(length, itemName)
 end
 
 -- Place the same item multiple times (options: down, forward, and up)
-local function placeMulti(itemName, _down, _forward, _up)
+---comment
+---@param doPlaceDown boolean Whether to place an item downward
+---@param doPlaceForward boolean Whether to place an item forward
+---@param doPlaceUp boolean Whether to place an item upward
+---@param itemName string|nil The name of the item to place (or whatever is selected)
+---@return boolean success Whether all requested placements succeeded
+local function placeMulti(doPlaceDown, doPlaceForward, doPlaceUp, itemName)
+    if doPlaceDown and not placeDown(itemName) then
+        return false
+    end
+    if doPlaceForward and not place(itemName) then
+        return false
+    end
+    if doPlaceUp and not placeUp(itemName) then
+        return false
+    end
+    return true
+end
+
+---Builds a wall up to 3 blocks tall
+---@param length integer The length of the wall
+---@param height integer The height of the wall (must be 1-3)
+---@param itemName string The name of the item to place (default: the currently selected item)
+local function placeWall(length, height, itemName)
+    check(length >= 1, "placeWall() called with non-positive length: "..length)
+    check(height >= 1 and height <= 3, "placeWall() called with invalid height: "..height.." (must be 1-3)")
     if not itemName then
-        itemName = turtle.getItemDetail().name
+        itemName = getSelectedItemName()
     end
-    if _down then
-        if not select(itemName) then
-            error("Ran out of material '"..itemName.."'")
+    local qty = length * height
+    check(
+        getItemTotal(itemName) >= qty,
+        "Not enough of item '"..itemName.."' to complete construction ("..qty.." needed)"
+    )
+
+    check(up(), "Not enough room to place wall / maneuver")
+    for _ = 1, length do
+        check(placeDown(itemName), "Failed to place item")
+        if height > 2 then
+            check(placeUp(itemName), "Failed to place item")
         end
-        placeDown()
+        check(back(), "Not enough room to place wall / maneuver")
+        if height > 1 then
+            check(place(itemName), "Failed to place item")
+        end
     end
-    if _forward then
-        if not select(itemName) then
-            error("Ran out of material '"..itemName.."'")
-        end
-        place()
+    check(down(), "Not enough room to place wall / maneuver")
+    return true
+end
+
+---Place a rectangle of walls using the specified item
+---@param width integer Width of the rectangular area (including walls)
+---@param height integer Height of the walls (1-3)
+---@param length integer Length of the rectangular area (including walls)
+---@param itemName string|nil Name of the item to use (or whatever is selected)
+local function placeWalls(width, height, length, itemName)
+    check(length >= 1, "placeWall() called with non-positive length: "..length)
+    check(width >= 1, "placeWalls() called with non-positive width: "..width)
+    check(height >= 1 and height <= 3, "placeWall() called with invalid height: "..height.." (must be 1-3)")
+
+    if not itemName then
+        itemName = getSelectedItemName()
     end
-    if _up then
-        if not select(itemName) then
-            error("Ran out of material '"..itemName.."'")
-        end
-        placeUp()
+
+    local qty = (width-1)*2*height + (length-1)*2*height
+    check(
+        getItemTotal(itemName) >= qty,
+        "Not enough of item '"..itemName.."' to complete construction ("..qty.." needed)"
+    )
+
+    turnAround()
+    placeWall(length-1, height, itemName)
+    turnRight()
+    placeWall(width-1, height, itemName)
+    turnRight()
+    placeWall(length-1, height, itemName)
+    turnRight()
+    -- Stop one block shy of filling the last wall so the turtle doesn't back into the first wall
+    placeWall(width-2, height, itemName)
+    -- Place the last column of blocks
+    for _ = 1, height do
+        check(placeDown(itemName), "Failed to place item")
+        check(up(), "Not enough space to place walls / maneuver")
     end
 end
 
+
+-- EXPORT
+
+
 return {
+    -- Constants
+    NUM_SLOTS = NUM_SLOTS,
+
+    -- Utils
+    check = check,
+    refuel = refuel,
+    select = select,
+    getItemDetail = getItemDetail,
+    getItemCount = getItemCount,
+    getItemSpace = getItemSpace,
+    getItemTotal = getItemTotal,
+    getSelectedItemName = getSelectedItemName,
+
     -- Movement
     forward = forward,
     back = back,
@@ -327,6 +524,7 @@ return {
     down = down,
     turnRight = turnRight,
     turnLeft = turnLeft,
+    turnAround = turnAround,
 
     -- Digging
     dig = dig,
@@ -340,13 +538,12 @@ return {
     digAndMoveDown = digAndMoveDown,
     digMultiAndMove = digMultiAndMove,
 
-    -- Place
+    -- Placement
     place = place,
     placeUp = placeUp,
     placeDown = placeDown,
     placeLine = placeLine,
     placeMulti = placeMulti,
-
-    -- Util
-    refuel = refuel,
+    placeWall = placeWall,
+    placeWalls = placeWalls,
 }
