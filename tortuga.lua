@@ -42,6 +42,12 @@ local function forward()
     return turtle.forward()
 end
 
+-- Move back, refueling first if necessary
+local function back()
+    refuel(1)
+    return turtle.back()
+end
+
 -- Move up, refueling first if necessary
 local function up()
     refuel(1)
@@ -240,12 +246,83 @@ local function digBox(x, y, z)
                 end
             end
         end
+        if goingUp then
+            digDown()
+        else
+            digUp()
+        end
+    end
+end
+
+local function place()
+    refuel(1)
+    return turtle.place()
+end
+
+local function placeUp()
+    refuel(1)
+    return turtle.placeUp()
+end
+
+local function placeDown()
+    refuel(1)
+    return turtle.placeDown()
+end
+
+-- Select an item with the provided name (e.g. "minecraft:stone")
+local function select(itemName)
+    for slot = 1, 16 do
+        turtle.select(slot)
+        if turtle.getItemDetail().name == itemName then
+            return true
+        end
+    end
+    return false
+end
+
+-- Place a line of the same item.
+local function placeLine(length, itemName)
+    if not itemName then
+        itemName = turtle.getItemDetail().name
+    end
+    for i = 1, length do
+        if not select(itemName) then
+            error("Ran out of material '"..itemName.."'")
+        end
+        place(itemName)
+        back()
+    end
+end
+
+-- Place the same item multiple times (options: down, forward, and up)
+local function placeMulti(itemName, _down, _forward, _up)
+    if not itemName then
+        itemName = turtle.getItemDetail().name
+    end
+    if _down then
+        if not select(itemName) then
+            error("Ran out of material '"..itemName.."'")
+        end
+        placeDown()
+    end
+    if _forward then
+        if not select(itemName) then
+            error("Ran out of material '"..itemName.."'")
+        end
+        place()
+    end
+    if _up then
+        if not select(itemName) then
+            error("Ran out of material '"..itemName.."'")
+        end
+        placeUp()
     end
 end
 
 return {
     -- Movement
     forward = forward,
+    back = back,
     up = up,
     down = down,
     turnRight = turnRight,
@@ -262,6 +339,13 @@ return {
     digAndMoveUp = digAndMoveUp,
     digAndMoveDown = digAndMoveDown,
     digMultiAndMove = digMultiAndMove,
+
+    -- Place
+    place = place,
+    placeUp = placeUp,
+    placeDown = placeDown,
+    placeLine = placeLine,
+    placeMulti = placeMulti,
 
     -- Util
     refuel = refuel,
