@@ -18,6 +18,7 @@ end
 while true do
     -- Wait for the crop to be ready to harvest
     if cropReady() then
+        print("Starting harvest...")
         -- Harvest and replant crop
         t.layer(7, 7, farm)
         -- Deposit wheat
@@ -29,6 +30,7 @@ while true do
         t.forward(6)
         t.turnAround()
     end
+    print("Sleeping...")
     ---@diagnostic disable-next-line: undefined-field
     os.sleep(60)
 end
