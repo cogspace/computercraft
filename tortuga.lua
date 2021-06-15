@@ -434,12 +434,12 @@ end
 
 ---Builds a wall up to 3 blocks tall
 ---@param length integer The length of the wall
----@param height integer The height of the wall (must be 1-3)
+---@param height integer The height of the wall
 ---@param itemName string The name of the item to place (default: the currently selected item)
----@param dontMoveUpAtStart boolean|nil Whether to skip moving up at the start (and down at end), in which case it must be done manually.
+---@param dontMoveUpAtStart boolean|nil Whether to skip moving up at the start
 local function placeWall(length, height, itemName, dontMoveUpAtStart)
     check(length and length >= 1, "placeWall() called with non-positive length: "..length)
-    check(height and height >= 1 and height <= 3, "placeWall() called with invalid height: "..height.." (must be 1-3)")
+    check(height and height >= 1, "placeWall() called with non-positive height: "..height)
     if not itemName then
         itemName = getSelectedItemName()
     end
@@ -452,19 +452,24 @@ local function placeWall(length, height, itemName, dontMoveUpAtStart)
     if not dontMoveUpAtStart then
         check(up(), "Not enough room to place wall / maneuver")
     end
-    for _ = 1, length do
-        check(placeDown(itemName), "Failed to place item")
-        if height > 2 then
-            check(placeUp(itemName), "Failed to place item")
+    repeat
+        for _ = 1, length do
+            check(placeDown(itemName), "Failed to place item")
+            if height > 2 then
+                check(placeUp(itemName), "Failed to place item")
+            end
+            check(back(), "Not enough room to place wall / maneuver")
+            if height > 1 then
+                check(place(itemName), "Failed to place item")
+            end
         end
-        check(back(), "Not enough room to place wall / maneuver")
-        if height > 1 then
-            check(place(itemName), "Failed to place item")
+        height = height - 3
+        if height > 0 then
+            check(up(3), "Not enough room to place wall / maneuver")
+            check(forward(), "Not enough room to place wall / maneuver")
+            turnAround()
         end
-    end
-    if not dontMoveUpAtStart then
-        check(down(), "Not enough room to place wall / maneuver")
-    end
+    until height < 1
     return true
 end
 
