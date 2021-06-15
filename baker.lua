@@ -4,10 +4,20 @@ local input = turtle.suckUp
 local output = turtle.drop
 
 local function inputOrSleep()
-    if not input(1) then
+    while not input(1) do
         ---@diagnostic disable-next-line: undefined-field
         os.sleep(30)
     end
+end
+
+term.write("Loaves baked: ")
+local writeX, writeY = term.getCursorPos()
+local loavesBaked = 0
+
+local function incrementBreadCounter()
+    loavesBaked = loavesBaked + 1
+    term.setCursorPos(writeX, writeY)
+    term.write(loavesBaked)
 end
 
 while true do
@@ -25,4 +35,6 @@ while true do
 
     -- Output bread
     output()
+
+    incrementBreadCounter()
 end
