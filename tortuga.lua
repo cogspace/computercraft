@@ -94,31 +94,59 @@ end
 
 
 ---Move forward, refueling first if necessary
+---@param n integer|nil Number of blocks to move forward (default: 1)
 ---@return boolean success Whether moving succeeded or not
-local function forward()
-    refuel(1)
-    return turtle.forward()
+local function forward(n)
+    if not n then
+        n = 1
+    end
+    refuel(n)
+    if not turtle.forward() then
+        return false
+    end
+    return true
 end
 
 ---Move back, refueling first if necessary
+---@param n integer|nil Number of blocks to move back (default: 1)
 ---@return boolean success Whether moving succeeded or not
-local function back()
-    refuel(1)
-    return turtle.back()
+local function back(n)
+    if not n then
+        n = 1
+    end
+    refuel(n)
+    if not turtle.back() then
+        return false
+    end
+    return true
 end
 
 ---Move up, refueling first if necessary
+---@param n integer|nil Number of blocks to move up (default: 1)
 ---@return boolean success Whether moving succeeded or not
-local function up()
-    refuel(1)
-    return turtle.up()
+local function up(n)
+    if not n then
+        n = 1
+    end
+    refuel(n)
+    if not turtle.up() then
+        return false
+    end
+    return true
 end
 
 ---Move down, refueling first if necessary
+---@param n integer|nil Number of blocks to move down (default: 1)
 ---@return boolean success Whether moving succeeded or not
-local function down()
-    refuel(1)
-    return turtle.down()
+local function down(n)
+    if not n then
+        n = 1
+    end
+    refuel(n)
+    if not turtle.down() then
+        return false
+    end
+    return true
 end
 
 local turnRight = turtle.turnRight
