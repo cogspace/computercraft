@@ -530,8 +530,8 @@ local function placeWalls(width, height, length, itemName)
     )
 
     turnAround()
+    check(up(), "Not enough space to place walls / maneuver")
     repeat
-        check(up(), "Not enough space to place walls / maneuver")
         placeWall(length-1, math.min(height, 3), itemName, true)
         turnRight()
         placeWall(width-1, math.min(height, 3), itemName, true)
