@@ -10,7 +10,7 @@ local NUM_SLOTS = 16
 ---Check that `test` is true, else throw err
 ---@param test boolean|nil Test value
 ---@param err string Error message
-local function check(test, err)
+local function validate(test, err)
     if not test then
         error(err)
     end
@@ -65,10 +65,11 @@ local function findAndSelect(itemName)
     error("Ran out of item '"..itemName.."' :(")
 end
 
----Get the name of the currently selected item
+---Get the name of the provided inventory slot (or selected slot)
+---@param slot integer|nil The slot number to check (default: selected slot)
 ---@return string|nil itemName The currently selected item name (or nil)
-local function getSelectedItemName()
-    local currentItem = turtle.getItemDetail()
+local function getItemName(slot)
+    local currentItem = turtle.getItemDetail(slot)
     if currentItem then
         return currentItem.name
     end
@@ -160,10 +161,45 @@ end
 local turnRight = turtle.turnRight
 local turnLeft = turtle.turnLeft
 
+local function turn(left)
+    if left then
+        turnLeft()
+    else
+        turnRight()
+    end
+end
+
 ---Turn 180 degrees
 ---@return boolean success If turning around succeeded (I don't think it can actually fail?)
 local function turnAround()
     return turnRight() and turnRight()
+end
+
+
+-- PATTERNS
+
+
+local function layer(width, length, callback)
+    validate(width > 1, "Invalid width: "..width)
+    validate(length > 1, "Invalid length: "..length)
+
+    local function uTurn(x)
+        turn(x % 2 == 0)
+        forward()
+        turn(x % 2 == 0)
+    end
+
+    -- Go through pattern and call callback at each cell
+    for x = 1, width do
+        callback(x, 1)
+        for z = 1, length-1 do
+            forward()
+            callback(x, z+1)
+        end
+        if x < width then
+            uTurn(x)
+        end
+    end
 end
 
 
@@ -474,35 +510,35 @@ end
 ---@param itemName string The name of the item to place (default: the currently selected item)
 ---@param dontMoveUpAtStart boolean|nil Whether to skip moving up at the start
 local function placeWall(length, height, itemName, dontMoveUpAtStart)
-    check(length and length >= 1, "placeWall() called with non-positive length: "..length)
-    check(height and height >= 1, "placeWall() called with non-positive height: "..height)
+    validate(length and length >= 1, "placeWall() called with non-positive length: "..length)
+    validate(height and height >= 1, "placeWall() called with non-positive height: "..height)
     if not itemName then
-        itemName = getSelectedItemName()
+        itemName = getItemName()
     end
     local qty = length * height
-    check(
+    validate(
         getItemTotal(itemName) >= qty,
         "Not enough of item '"..itemName.."' to complete construction ("..qty.." needed)"
     )
 
     if not dontMoveUpAtStart then
-        check(up(), "Not enough room to place wall / maneuver")
+        validate(up(), "Not enough room to place wall / maneuver")
     end
     repeat
         for _ = 1, length do
-            check(placeDown(itemName), "Failed to place item")
+            validate(placeDown(itemName), "Failed to place item")
             if height > 2 then
-                check(placeUp(itemName), "Failed to place item")
+                validate(placeUp(itemName), "Failed to place item")
             end
-            check(back(), "Not enough room to place wall / maneuver")
+            validate(back(), "Not enough room to place wall / maneuver")
             if height > 1 then
-                check(place(itemName), "Failed to place item")
+                validate(place(itemName), "Failed to place item")
             end
         end
         height = height - 3
         if height > 0 then
-            check(up(3), "Not enough room to place wall / maneuver")
-            check(forward(), "Not enough room to place wall / maneuver")
+            validate(up(3), "Not enough room to place wall / maneuver")
+            validate(forward(), "Not enough room to place wall / maneuver")
             turnAround()
         end
     until height < 1
@@ -515,22 +551,22 @@ end
 ---@param length integer Length of the rectangular area (including walls), min 2
 ---@param itemName string|nil Name of the item to use (or whatever is selected)
 local function placeWalls(width, height, length, itemName)
-    check(length and length >= 2, "placeWall() called with invalid length: "..length)
-    check(width and width >= 2, "placeWalls() called with invalid width: "..width)
-    check(height and height >= 1, "placeWall() called with invalid height: "..height)
+    validate(length and length >= 2, "placeWall() called with invalid length: "..length)
+    validate(width and width >= 2, "placeWalls() called with invalid width: "..width)
+    validate(height and height >= 1, "placeWall() called with invalid height: "..height)
 
     if not itemName then
-        itemName = getSelectedItemName()
+        itemName = getItemName()
     end
 
     local qty = (width-1)*2*height + (length-1)*2*height
-    check(
+    validate(
         getItemTotal(itemName) >= qty,
         "Not enough of item '"..itemName.."' to complete construction ("..qty.." needed)"
     )
 
     turnAround()
-    check(up(), "Not enough space to place walls / maneuver")
+    validate(up(), "Not enough space to place walls / maneuver")
     repeat
         placeWall(length-1, math.min(height, 3), itemName, true)
         turnRight()
@@ -542,13 +578,57 @@ local function placeWalls(width, height, length, itemName)
         placeWall(width-2, math.min(height, 3), itemName, true)
         -- Place the last column of blocks
         for _ = 1, math.min(height, 3) do
-            check(placeDown(itemName), "Failed to place item")
-            check(up(), "Not enough space to place walls / maneuver")
+            validate(placeDown(itemName), "Failed to place item")
+            validate(up(), "Not enough space to place walls / maneuver")
         end
         back()
         turnRight()
         height = height - 3
     until height <= 0
+end
+
+
+-- DROPPING
+
+
+
+---Drop all items with the given name forward
+---@param itemName string Name of the items to drop
+local function dropAll(itemName)
+    local previousSelection = turtle.getSelectedSlot()
+    for slot = 1, NUM_SLOTS do
+        if itemName == getItemName(slot) then
+            turtle.select(slot)
+            turtle.drop()
+        end
+    end
+    turtle.select(previousSelection)
+end
+
+---Drop all items with the given name downward
+---@param itemName string Name of the items to drop
+local function dropAllDown(itemName)
+    local previousSelection = turtle.getSelectedSlot()
+    for slot = 1, NUM_SLOTS do
+        if itemName == getItemName(slot) then
+            turtle.select(slot)
+            turtle.dropDown()
+        end
+    end
+    turtle.select(previousSelection)
+end
+
+---Drop all items with the given name upward
+---@param itemName string Name of the items to drop
+local function dropAllUp(itemName)
+    local previousSelection = turtle.getSelectedSlot()
+    for slot = 1, NUM_SLOTS do
+        if itemName == getItemName(slot) then
+            turtle.select(slot)
+            turtle.dropUp()
+        end
+    end
+    turtle.select(previousSelection)
 end
 
 
@@ -560,11 +640,11 @@ local tortuga = {
     NUM_SLOTS = NUM_SLOTS,
 
     -- Utils
-    check = check,
+    check = validate,
     refuel = refuel,
     findAndSelect = findAndSelect,
     getItemTotal = getItemTotal,
-    getSelectedItemName = getSelectedItemName,
+    getItemName = getItemName,
 
     -- Movement
     forward = forward,
@@ -574,6 +654,10 @@ local tortuga = {
     turnRight = turnRight,
     turnLeft = turnLeft,
     turnAround = turnAround,
+    turn = turn,
+
+    -- PATTERNS
+    layer = layer,
 
     -- Digging
     dig = dig,
@@ -595,6 +679,11 @@ local tortuga = {
     placeMulti = placeMulti,
     placeWall = placeWall,
     placeWalls = placeWalls,
+
+    -- Dropping
+    dropAll = dropAll,
+    dropAllDown = dropAllDown,
+    dropAllUp = dropAllUp,
 }
 
 return tortuga
