@@ -26,7 +26,7 @@ local function refuel(min)
         local fueled = false
         for slot = 1, NUM_SLOTS do
             turtle.select(slot)
-            if refuel(1) then
+            if turtle.refuel(1) then
                 fueled = true
                 break
             end
