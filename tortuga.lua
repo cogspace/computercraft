@@ -437,8 +437,8 @@ end
 ---@param height integer The height of the wall (must be 1-3)
 ---@param itemName string The name of the item to place (default: the currently selected item)
 local function placeWall(length, height, itemName)
-    check(length >= 1, "placeWall() called with non-positive length: "..length)
-    check(height >= 1 and height <= 3, "placeWall() called with invalid height: "..height.." (must be 1-3)")
+    check(length and length >= 1, "placeWall() called with non-positive length: "..length)
+    check(height and height >= 1 and height <= 3, "placeWall() called with invalid height: "..height.." (must be 1-3)")
     if not itemName then
         itemName = getSelectedItemName()
     end
@@ -469,9 +469,9 @@ end
 ---@param length integer Length of the rectangular area (including walls)
 ---@param itemName string|nil Name of the item to use (or whatever is selected)
 local function placeWalls(width, height, length, itemName)
-    check(length >= 1, "placeWall() called with non-positive length: "..length)
-    check(width >= 1, "placeWalls() called with non-positive width: "..width)
-    check(height >= 1 and height <= 3, "placeWall() called with invalid height: "..height.." (must be 1-3)")
+    check(length and length >= 1, "placeWall() called with non-positive length: "..length)
+    check(width and width >= 1, "placeWalls() called with non-positive width: "..width)
+    check(height and height >= 1 and height <= 3, "placeWall() called with invalid height: "..height.." (must be 1-3)")
 
     if not itemName then
         itemName = getSelectedItemName()
