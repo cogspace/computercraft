@@ -101,8 +101,10 @@ local function forward(n)
         n = 1
     end
     refuel(n)
-    if not turtle.forward() then
-        return false
+    for _ = 1, n do
+        if not turtle.forward() then
+            return false
+        end
     end
     return true
 end
@@ -115,8 +117,10 @@ local function back(n)
         n = 1
     end
     refuel(n)
-    if not turtle.back() then
-        return false
+    for _ = 1, n do
+        if not turtle.back() then
+            return false
+        end
     end
     return true
 end
@@ -129,8 +133,10 @@ local function up(n)
         n = 1
     end
     refuel(n)
-    if not turtle.up() then
-        return false
+    for _ = 1, n do
+        if not turtle.up() then
+            return false
+        end
     end
     return true
 end
@@ -143,8 +149,10 @@ local function down(n)
         n = 1
     end
     refuel(n)
-    if not turtle.down() then
-        return false
+    for _ = 1, n do
+        if not turtle.down() then
+            return false
+        end
     end
     return true
 end
