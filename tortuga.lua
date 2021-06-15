@@ -468,7 +468,7 @@ local function placeMulti(doPlaceDown, doPlaceForward, doPlaceUp, itemName)
     return true
 end
 
----Builds a wall up to 3 blocks tall
+---Builds a wall
 ---@param length integer The length of the wall
 ---@param height integer The height of the wall
 ---@param itemName string The name of the item to place (default: the currently selected item)
@@ -511,13 +511,13 @@ end
 
 ---Place a rectangle of walls using the specified item
 ---@param width integer Width of the rectangular area (including walls)
----@param height integer Height of the walls (1-3)
+---@param height integer Height of the walls
 ---@param length integer Length of the rectangular area (including walls)
 ---@param itemName string|nil Name of the item to use (or whatever is selected)
 local function placeWalls(width, height, length, itemName)
     check(length and length >= 1, "placeWall() called with non-positive length: "..length)
     check(width and width >= 1, "placeWalls() called with non-positive width: "..width)
-    check(height and height >= 1 and height <= 3, "placeWall() called with invalid height: "..height.." (must be 1-3)")
+    check(height and height >= 1, "placeWall() called with invalid height: "..height)
 
     if not itemName then
         itemName = getSelectedItemName()
@@ -530,20 +530,25 @@ local function placeWalls(width, height, length, itemName)
     )
 
     turnAround()
-    check(up(), "Not enough space to place walls / maneuver")
-    placeWall(length-1, height, itemName, true)
-    turnRight()
-    placeWall(width-1, height, itemName, true)
-    turnRight()
-    placeWall(length-1, height, itemName, true)
-    turnRight()
-    -- Stop one block shy of filling the last wall so the turtle doesn't back into the first wall
-    placeWall(width-2, height, itemName, true)
-    -- Place the last column of blocks
-    for _ = 1, height do
-        check(placeDown(itemName), "Failed to place item")
+    repeat
         check(up(), "Not enough space to place walls / maneuver")
-    end
+        placeWall(length-1, math.min(height, 3), itemName, true)
+        turnRight()
+        placeWall(width-1, math.min(height, 3), itemName, true)
+        turnRight()
+        placeWall(length-1, math.min(height, 3), itemName, true)
+        turnRight()
+        -- Stop one block shy of filling the last wall so the turtle doesn't back into the first wall
+        placeWall(width-2, math.min(height, 3), itemName, true)
+        -- Place the last column of blocks
+        for _ = 1, math.min(height, 3) do
+            check(placeDown(itemName), "Failed to place item")
+            check(up(), "Not enough space to place walls / maneuver")
+        end
+        back()
+        turnRight()
+        height = height - 3
+    until height <= 0
 end
 
 
