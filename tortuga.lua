@@ -510,13 +510,13 @@ local function placeWall(length, height, itemName, dontMoveUpAtStart)
 end
 
 ---Place a rectangle of walls using the specified item
----@param width integer Width of the rectangular area (including walls)
----@param height integer Height of the walls
----@param length integer Length of the rectangular area (including walls)
+---@param width integer Width of the rectangular area (including walls), min 2
+---@param height integer Height of the walls, min 1
+---@param length integer Length of the rectangular area (including walls), min 2
 ---@param itemName string|nil Name of the item to use (or whatever is selected)
 local function placeWalls(width, height, length, itemName)
-    check(length and length >= 1, "placeWall() called with non-positive length: "..length)
-    check(width and width >= 1, "placeWalls() called with non-positive width: "..width)
+    check(length and length >= 2, "placeWall() called with invalid length: "..length)
+    check(width and width >= 2, "placeWalls() called with invalid width: "..width)
     check(height and height >= 1, "placeWall() called with invalid height: "..height)
 
     if not itemName then
