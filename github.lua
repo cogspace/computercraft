@@ -18,11 +18,13 @@ if not branch then
 end
 
 -- Build URL
-local cacheBuster = math.random(99999999999)
-local url = BASE_URL.."/"..user.."/"..repo.."/"..branch.."/"..filename.."?"..cacheBuster
+local url = BASE_URL.."/"..user.."/"..repo.."/"..branch.."/"..filename
+local headers = {
+    ["Cache-Control"] = "max-age=0"
+}
 
 -- Download code
-local request = http.get(url)
+local request = http.get(url, headers)
 if not request then
     print("Reading from URL failed: " .. url)
     print("Note: Only public repositories are supported.")

@@ -26,7 +26,7 @@ local function refuel(min)
         local fueled = false
         for slot = 1, NUM_SLOTS do
             turtle.select(slot)
-            if turtle.refuel(1) then
+            if refuel(1) then
                 fueled = true
                 break
             end
@@ -41,10 +41,13 @@ local function refuel(min)
     return true
 end
 
----Select an item with the provided name
+---Find and select an item with the provided name
 ---@param itemName string The name of the item to select (e.g. "minecraft:stone")
 ---@return boolean success Whether the item was successfully selected (else, error)
-local function select(itemName)
+local function findAndSelect(itemName)
+    if not itemName then
+        return false
+    end
     -- If the right item is already selected, don't do anything.
     local currentItem = turtle.getItemDetail()
     if currentItem and currentItem.name == itemName then
@@ -52,8 +55,9 @@ local function select(itemName)
     end
     -- Otherwise, try to find the item.
     for slot = 1, NUM_SLOTS do
-        if turtle.select(slot) and turtle.getItemDetail().name == itemName then
-            return true
+        local item = turtle.getItemDetail(slot)
+        if item and item.name == itemName then
+            return turtle.select(slot)
         end
     end
     -- If we can't find it, throw an error.
@@ -61,14 +65,10 @@ local function select(itemName)
     error("Ran out of item '"..itemName.."' :(")
 end
 
-local getItemDetail = turtle.getItemDetail
-local getItemCount = turtle.getItemCount
-local getItemSpace = turtle.getItemSpace
-
 ---Get the name of the currently selected item
 ---@return string|nil itemName The currently selected item name (or nil)
 local function getSelectedItemName()
-    local currentItem = getItemDetail()
+    local currentItem = turtle.getItemDetail()
     if currentItem then
         return currentItem.name
     end
@@ -81,7 +81,7 @@ end
 local function getItemTotal(itemName)
     local count = 0
     for slot = 1, NUM_SLOTS do
-        local item = getItemDetail(slot)
+        local item = turtle.getItemDetail(slot)
         if item and item.name == itemName then
             count = count + turtle.getItemCount(slot)
         end
@@ -372,7 +372,7 @@ end
 local function place(itemName)
     refuel(1)
     if itemName then
-        select(itemName)
+        findAndSelect(itemName)
     end
     return turtle.place()
 end
@@ -383,7 +383,7 @@ end
 local function placeUp(itemName)
     refuel(1)
     if itemName then
-        select(itemName)
+        findAndSelect(itemName)
     end
     return turtle.placeUp()
 end
@@ -394,7 +394,7 @@ end
 local function placeDown(itemName)
     refuel(1)
     if itemName then
-        select(itemName)
+        findAndSelect(itemName)
     end
     return turtle.placeDown()
 end
@@ -405,7 +405,7 @@ end
 local function placeLine(length, itemName)
     for i = 1, length do
         if itemName then
-            select(itemName)
+            findAndSelect(itemName)
         end
         place(itemName)
         back()
@@ -503,17 +503,14 @@ end
 -- EXPORT
 
 
-return {
+local tortuga = {
     -- Constants
     NUM_SLOTS = NUM_SLOTS,
 
     -- Utils
     check = check,
     refuel = refuel,
-    select = select,
-    getItemDetail = getItemDetail,
-    getItemCount = getItemCount,
-    getItemSpace = getItemSpace,
+    findAndSelect = findAndSelect,
     getItemTotal = getItemTotal,
     getSelectedItemName = getSelectedItemName,
 
@@ -547,3 +544,5 @@ return {
     placeWall = placeWall,
     placeWalls = placeWalls,
 }
+
+return tortuga
