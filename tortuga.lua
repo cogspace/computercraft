@@ -436,7 +436,8 @@ end
 ---@param length integer The length of the wall
 ---@param height integer The height of the wall (must be 1-3)
 ---@param itemName string The name of the item to place (default: the currently selected item)
-local function placeWall(length, height, itemName)
+---@param dontMoveUpAtStart boolean|nil Whether to skip moving up at the start (and down at end), in which case it must be done manually.
+local function placeWall(length, height, itemName, dontMoveUpAtStart)
     check(length and length >= 1, "placeWall() called with non-positive length: "..length)
     check(height and height >= 1 and height <= 3, "placeWall() called with invalid height: "..height.." (must be 1-3)")
     if not itemName then
@@ -448,7 +449,9 @@ local function placeWall(length, height, itemName)
         "Not enough of item '"..itemName.."' to complete construction ("..qty.." needed)"
     )
 
-    check(up(), "Not enough room to place wall / maneuver")
+    if not dontMoveUpAtStart then
+        check(up(), "Not enough room to place wall / maneuver")
+    end
     for _ = 1, length do
         check(placeDown(itemName), "Failed to place item")
         if height > 2 then
@@ -459,7 +462,9 @@ local function placeWall(length, height, itemName)
             check(place(itemName), "Failed to place item")
         end
     end
-    check(down(), "Not enough room to place wall / maneuver")
+    if not dontMoveUpAtStart then
+        check(down(), "Not enough room to place wall / maneuver")
+    end
     return true
 end
 
@@ -484,14 +489,15 @@ local function placeWalls(width, height, length, itemName)
     )
 
     turnAround()
-    placeWall(length-1, height, itemName)
+    check(up(), "Not enough space to place walls / maneuver")
+    placeWall(length-1, height, itemName, true)
     turnRight()
-    placeWall(width-1, height, itemName)
+    placeWall(width-1, height, itemName, true)
     turnRight()
-    placeWall(length-1, height, itemName)
+    placeWall(length-1, height, itemName, true)
     turnRight()
     -- Stop one block shy of filling the last wall so the turtle doesn't back into the first wall
-    placeWall(width-2, height, itemName)
+    placeWall(width-2, height, itemName, true)
     -- Place the last column of blocks
     for _ = 1, height do
         check(placeDown(itemName), "Failed to place item")
