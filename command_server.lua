@@ -161,7 +161,7 @@ local function handleMessage(id, msg)
     if not res.action then
         res.action = "re:"..msg.action
     end
-    rednet.send(id, res)
+    rednet.send(id, res, PROTOCOL)
 end
 
 local function main()
@@ -188,7 +188,7 @@ local function main()
         if not ok then
             rednet.send(id, {
                 error = "An unexpected error occurred. Check server logs for details."
-            })
+            }, PROTOCOL)
             local msgString = textutils.serialize(msg)
             print(("[ERROR] #%d %s >> %s"):format(id, msgString, err))
         end
