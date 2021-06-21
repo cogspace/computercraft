@@ -19,10 +19,6 @@ local function findBlocks(minX, minY, minZ, maxX, maxY, maxZ, id, callback, step
     if not stepY then stepY = 1 end
     if not stepZ then stepZ = 1 end
 
-    if not callback then
-        error("Callback function hit(x, y, z) must be provided.")
-    end
-
     for x = minX, maxX, stepX do
         for z = minZ, maxZ, stepZ do
             for y = minY, maxY, stepY do
