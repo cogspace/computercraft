@@ -98,16 +98,11 @@ local handlers = {
         return {
             actions = {
                 help = "You're looking at it.",
-                ping = "Returns a pong, mostly useful for discovering the command server ID",
                 genKey = "Generates a new API {key}. Keep it secret. Keep it safe.",
                 credit = "Credits {key} by {amount}",
                 testForBlock = "Checks if the block at {x, y, z} has block ID {id}",
             }
         }
-    end,
-
-    ping = function(id, msg)
-        return { pong = true }
     end,
 
     genKey = function(id, msg)
