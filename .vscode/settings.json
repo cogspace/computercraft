@@ -5,6 +5,7 @@
 		"http",
 		"fs",
 		"exit",
-		"term"
+		"term",
+		"exec"
 	]
 }
