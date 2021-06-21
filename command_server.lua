@@ -182,15 +182,15 @@ local function main()
 
     print("Hosting! Waiting for connections...")
     while true do
-        local id, msg = rednet.receive()
-        print("Message received from #"..id..": "..msg)
+        local id, msg = rednet.receive(PROTOCOL)
+        print(("Message received from #%d: %s"):format(id, textutils.serialize(msg)))
         local ok, err = pcall(handleMessage, id, msg)
         if not ok then
             rednet.send(id, {
                 error = "An unexpected error occurred. Check server logs for details."
             })
             local msgString = textutils.serialize(msg)
-            print("[ERROR] #"..id.." "..msgString.." >> "..err)
+            print(("[ERROR] #%d %s >> %s"):format(id, msgString, err))
         end
     end
 end
