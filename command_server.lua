@@ -161,14 +161,14 @@ local function handleMessage(id, msg)
 end
 
 local function main()
-    local modems = peripheral.find("modem")
-    if not modems[1] or not modems[1].isWireless() then
+    local modem = peripheral.find("modem")
+    if not modem or not modem.isWireless() then
         error("No wireless modem attached!")
     end
 
     readCreditFile()
 
-    rednet.open(modems[1])
+    rednet.open(modem)
     rednet.host(PROTOCOL, HOSTNAME)
 
     while true do
