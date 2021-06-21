@@ -165,6 +165,7 @@ local function handleMessage(id, msg)
 end
 
 local function main()
+    print("Connecting modem...")
     local modem = peripheral.find("modem")
     if not modem or not modem.isWireless() then
         error("No wireless modem attached!")
@@ -172,20 +173,24 @@ local function main()
 
     local modemName = peripheral.getName(modem)
 
+    print("Loading credit file...")
     readCreditFile()
 
+    print("Opening rednet host...")
     rednet.open(modemName)
     rednet.host(PROTOCOL, HOSTNAME)
 
+    print("Hosting! Waiting for connections...")
     while true do
         local id, msg = rednet.receive(PROTOCOL)
+        print("Message received from #"..id..": "..msg)
         local ok, err = pcall(handleMessage, id, msg)
         if not ok then
             rednet.send(id, {
                 error = "An unexpected error occurred. Check server logs for details."
             })
             local msgString = textutils.serialize(msg)
-            warn("[!!] #"..id.." "..msgString.." >> "..err)
+            print("[ERROR] #"..id.." "..msgString.." >> "..err)
         end
     end
 end
