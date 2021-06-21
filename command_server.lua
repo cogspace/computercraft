@@ -170,9 +170,11 @@ local function main()
         error("No wireless modem attached!")
     end
 
+    local modemName = peripheral.getName(modem)
+
     readCreditFile()
 
-    rednet.open(modem)
+    rednet.open(modemName)
     rednet.host(PROTOCOL, HOSTNAME)
 
     while true do
