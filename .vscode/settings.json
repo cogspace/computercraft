@@ -6,6 +6,9 @@
 		"fs",
 		"exit",
 		"term",
-		"exec"
+		"exec",
+		"rednet",
+		"textutils",
+		"peripheral"
 	]
 }

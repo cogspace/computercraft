@@ -30,23 +30,9 @@ local function findBlocks(minX, minY, minZ, maxX, maxY, maxZ, id, callback, step
     end
 end
 
-local function findDiamonds()
-    findBlocks(0, 16, 0, 64, 0, 64)
-    findBlocks(
-        0, 16, 0,   -- Min (note: min Y > max Y)
-        64, 0, 64,  -- Max (note: max Y < min Y)
-        "diamond_ore", -- block ID
-        function(x, y, z) -- hit callback
-            print("Found diamonds at "..x.." "..y.." "..z.." !!")
-        end,
-        2, -2, 2    -- Step (note: Y step < 0)
-    )
-end
-
 local commander = {
     testForBlock = testForBlock,
     findBlocks = findBlocks,
-    findDiamonds = findDiamonds,
 }
 
 return commander
