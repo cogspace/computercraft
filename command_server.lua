@@ -52,11 +52,11 @@ end
 
 
 local function debit(key, creditAmount)
-    if CREDIT[key] >= creditAmount then
+    if CREDIT[key] and CREDIT[key] >= creditAmount then
         CREDIT[key] = CREDIT[key] - creditAmount
+        writeCreditFile()
         return true
     end
-    writeCreditFile()
     return false
 end
 
