@@ -182,7 +182,7 @@ local function main()
 
     print("Hosting! Waiting for connections...")
     while true do
-        local id, msg = rednet.receive(PROTOCOL)
+        local id, msg = rednet.receive()
         print("Message received from #"..id..": "..msg)
         local ok, err = pcall(handleMessage, id, msg)
         if not ok then
