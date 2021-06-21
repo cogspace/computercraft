@@ -33,19 +33,23 @@ local err = {
     end,
 }
 
-local function readCreditFile()
-    local creditFile = fs.open(CREDIT_FILE, "r")
-    local json = creditFile.readAll()
-    creditFile.close()
-    CREDIT = textutils.unserializeJSON(json)
-end
-
 local function writeCreditFile()
     local creditFile = fs.open(CREDIT_FILE, "w")
     local json = textutils.serializeJSON(CREDIT)
     creditFile.write(json)
     creditFile.close()
 end
+
+local function readCreditFile()
+    if not fs.exists(CREDIT_FILE) then
+        writeCreditFile()
+    end
+    local creditFile = fs.open(CREDIT_FILE, "r")
+    local json = creditFile.readAll()
+    creditFile.close()
+    CREDIT = textutils.unserializeJSON(json)
+end
+
 
 local function debit(key, creditAmount)
     if CREDIT[key] >= creditAmount then
