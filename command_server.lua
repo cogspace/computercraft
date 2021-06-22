@@ -9,7 +9,7 @@ local CREDIT = {}
 local err = {
     -- This error can be called as a handler
     invalidAction = function(id, msg)
-        return { error = "Invalid action: '"..msg.action.."'. Try 'help'." }
+        return { error = ("Invalid action: '%s'. Try 'help'."):format(msg.action) }
     end,
 
     -- This error can be called as a handler
@@ -25,11 +25,11 @@ local err = {
     end,
 
     invalidKey = function(key)
-        return { error = "Invalid key: '"..key.."'" }
+        return { error = ("Invalid key: '%s'"):format(key) }
     end,
 
     requiredField = function(fieldName)
-        return { error = "Field '"..fieldName.."' is required."}
+        return { error = ("Field '%s' is required."):format(fieldName) }
     end,
 }
 
@@ -154,7 +154,7 @@ local function handleMessage(id, msg)
 
     local res = handler(id, msg)
     if not res.action then
-        res.action = "re:"..msg.action
+        res.action = ("re:%s"):format(msg.action)
     end
     rednet.send(id, res, PROTOCOL)
 end
